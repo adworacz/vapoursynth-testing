@@ -26,7 +26,7 @@ core = vs.get_core(threads=num_threads)
 core.set_max_cache_size(256)
 num_frames = 1000
 gpu = True
-num_extra_iterations = 0
+num_extra_iterations = 15
 
 clip = core.std.BlankClip(format=vs.YUV420P8, width=1920, height=1080, color=[69, 242, 115], length=num_frames)
 

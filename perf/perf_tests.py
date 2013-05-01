@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
 import vapoursynth as vs
 from timer import Timer
 import os
 import csv
 import inspect
+
 
 class VSPerfTests(object):
     """Run a series of performance tests to collect metrics
@@ -13,6 +15,8 @@ class VSPerfTests(object):
         self.gpu = gpu
         self.iterations = iterations
         self.core = vs.Core(threads=threads)
+        if gpu:
+            self.core.set_max_cache_size(256)
         self.writer = writer
 
     def __str__(self):
@@ -60,6 +64,8 @@ class VSPerfTests(object):
                 clip = self.core.std.TransferFrame(clip, 1)
 
             clip = self.core.std.Transpose(clip)
+            for i in range(self.iterations - 1):
+                clip = self.core.std.Transpose(clip)
 
             if self.gpu:
                 clip = self.core.std.TransferFrame(clip, 0)
@@ -74,14 +80,16 @@ class VSPerfTests(object):
         clip = self.core.std.BlankClip(format=vs.YUV420P8, width=1920, height=1080, color=[112, 112, 220], length=self.frames)
 
         luty = []
-        for x in range(2**clip.format.bits_per_sample):
-           luty.append(max(min(x, 235), 16))
+        for x in range(2 ** clip.format.bits_per_sample):
+            luty.append(max(min(x, 235), 16))
 
         with Timer() as target:
             if self.gpu:
                 clip = self.core.std.TransferFrame(clip, 1)
 
             clip = self.core.std.Lut(clip=clip, lut=luty, planes=0)
+            for i in range(self.iterations - 1):
+                clip = self.core.std.Lut(clip=clip, lut=luty, planes=0)
 
             if self.gpu:
                 clip = self.core.std.TransferFrame(clip, 0)
@@ -102,6 +110,8 @@ class VSPerfTests(object):
                 clipb = self.core.std.TransferFrame(clipb, 1)
 
             clip = self.core.std.Merge(clips=[clipa, clipb])
+            for i in range(self.iterations - 1):
+                clip = self.core.std.Merge(clips=[clip, clipb])
 
             if self.gpu:
                 clip = self.core.std.TransferFrame(clip, 0)
@@ -130,7 +140,7 @@ if __name__ == '__main__':
     csvfile = open('results.csv', 'w', newline='')
     writer = csv.writer(csvfile)
 
-    for threads in [1, 2, 4, 8]:
+    for threads in [1, 2]:
         for iterations in [1, 16, 32]:
             for gpu in range(2):
                 performTests(VSPerfTests(writer=writer, threads=threads, frames=1000, iterations=iterations, gpu=bool(gpu)), writer)
