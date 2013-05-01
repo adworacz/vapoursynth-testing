@@ -1,0 +1,8 @@
+#Ignore testing and profile data
+*.txt
+*.prof
+*.out
+
+#Ignore output files
+*.mkv
+*.ffindex
