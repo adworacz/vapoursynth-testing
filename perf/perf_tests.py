@@ -98,9 +98,10 @@ class VSPerfTests(object):
 
         with Timer() as target:
             if self.gpu:
-                clip = self.core.std.TransferFrame(clip, 1)
+                clipa = self.core.std.TransferFrame(clipa, 1)
+                clipb = self.core.std.TransferFrame(clipb, 1)
 
-            clip = self.core.std.Merge(clips=[clipa,clipb])
+            clip = self.core.std.Merge(clips=[clipa, clipb])
 
             if self.gpu:
                 clip = self.core.std.TransferFrame(clip, 0)
@@ -109,6 +110,7 @@ class VSPerfTests(object):
                 clip.output(f)
 
         self.outputResults("Merge", target)
+
 
 def performTests(pt, writer):
     def pred(object):
@@ -129,8 +131,8 @@ if __name__ == '__main__':
     writer = csv.writer(csvfile)
 
     for threads in [1, 2, 4, 8]:
-        for iterations in [1]:
-            # for gpu in range(2):
-            performTests(VSPerfTests(writer=writer, threads=threads, frames=1000, iterations=iterations, gpu=False), writer)
+        for iterations in [1, 16, 32]:
+            for gpu in range(2):
+                performTests(VSPerfTests(writer=writer, threads=threads, frames=1000, iterations=iterations, gpu=bool(gpu)), writer)
 
     csvfile.close()
